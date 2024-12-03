@@ -18,7 +18,7 @@ function authenticateToken(req, res, next) {
     });
 }
 
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/productos', authenticateToken, async (req, res) => {
     try {
         const fetch = (await import('node-fetch')).default;
         const response = await fetch('https://peticiones.online/api/products'); // URL de la API de productos
@@ -37,24 +37,29 @@ router.get('/reporte/pdf', authenticateToken, async (req, res) => {
         const response = await fetch('https://peticiones.online/api/products');
         const products = await response.json();
 
+        // Crear el documento PDF
         const doc = new PDFDocument();
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
         doc.pipe(res);
 
-        // Contenido del PDF
-        doc.fontSize(20).text('Reporte de Productos', { align: 'center' });
-        doc.moveDown();
-
-        products.data.forEach((product, index) => {
-            doc.fontSize(12).text(`${index + 1}. ${product.name} - $${product.price}`);
-        });
-
-        // Finalizar el documento
-        doc.end();
-    } catch (error) {
-        res.status(500).json({ message: 'Error al generar el PDF' });
-    }
+         // Añadir contenido al PDF
+         doc.fontSize(20).text('Reporte de Productos', { align: 'center' }).moveDown();
+         if (products.data && products.data.length > 0) {
+             products.data.forEach((product, index) => {
+                 doc.fontSize(12).text(`${index + 1}. ${product.name} - $${product.price}`);
+             });
+         } else {
+             doc.fontSize(12).text('No hay productos disponibles.');
+         }
+ 
+         doc.end();
+     } catch (error) {
+         console.error('Error al generar el PDF:', error);
+         if (!res.headersSent) {
+             res.status(500).json({ message: 'Error al generar el PDF.' });
+         }
+     }
 });
 
 

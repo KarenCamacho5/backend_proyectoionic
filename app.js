@@ -15,7 +15,7 @@ app.use(express.json());
 
 // Rutas
 app.use('/api/login', loginRoute);
-app.use('/api/products', productsRoute);
+app.use('/api', productsRoute);
 
 // Iniciar el servidor
 const PORT = 3000;
