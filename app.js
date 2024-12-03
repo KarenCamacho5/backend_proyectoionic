@@ -5,7 +5,7 @@ const loginRoute = require('./routes/login');
 const productsRoute = require('./routes/products'); 
 
 app.use(cors({
-    origin: ['http://localhost:4200', 'https://proyectoionic.onrender.com', 'http://localhost:3000'], 
+    origin: ['http://localhost:4200', 'https://proyectoionic.onrender.com', 'http://localhost:3000', 'http://localhost:8100'], 
     credentials: true
 }));
 
