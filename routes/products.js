@@ -2,7 +2,6 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
 const fetch = require('node-fetch');
-const fs = require('fs');
 const ExcelJS = require('exceljs');
 const router = express.Router();
 
@@ -33,7 +32,7 @@ router.get('/productos', authenticateToken, async (req, res) => {
 
 
 // Ruta para generar PDF
-app.get('/reporte-pdf', async (req, res) => {
+router.get('/reporte-pdf', async (req, res) => {
     const doc = new PDFDocument();
 
     // Configura la respuesta para descarga
