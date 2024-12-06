@@ -1,11 +1,10 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
-const fetch = require('node-fetch');
+const axios = require('axios');
 const ExcelJS = require('exceljs');
 const router = express.Router();
 
-const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 
 // Middleware para validar el token
 function authenticateToken(req, res, next) {
@@ -37,36 +36,40 @@ router.get('/productos', authenticateToken, async (req, res) => {
 router.get('/reporte-pdf', async (req, res) => {
     const doc = new PDFDocument();
 
-    // Configura la respuesta para descarga
-    res.setHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
-    doc.pipe(res);
+  // Configura la respuesta para descargar el PDF
+  res.setHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
+  doc.pipe(res);
 
-    doc.fontSize(18).text('Lista de Productos', { align: 'center' });
-    doc.moveDown();
+  // Encabezado del PDF
+  doc.fontSize(18).text('Lista de Productos', { align: 'center' });
+  doc.moveDown();
 
-    try {
-        const response = await fetch('https://peticiones.online/api/products');
-        const products = await response.json();
+  try {
+    // Realiza la solicitud HTTP utilizando axios
+    const response = await axios.get('https://peticiones.online/api/products');
+    const products = response.data;
 
-        if (products.results && products.results.length > 0) {
-            products.results.forEach((item, index) => {
-                doc.fontSize(12).text(`${index + 1}. ${item.name}`);
-                doc.text(`   Descripción: ${item.description}`);
-                doc.text(`   Categoría: ${item.category}`);
-                doc.text(`   Precio: $${item.price}`);
-                doc.text(`   Activo: ${item.active ? 'Sí' : 'No'}`);
-                doc.text(`   Imagen: ${item.image}`);
-                doc.moveDown();
-            });
-        } else {
-            doc.fontSize(12).text('No hay productos disponibles.', { align: 'center' });
-        }
-    } catch (error) {
-        console.error('Error al obtener los productos:', error);
-        doc.fontSize(12).text('Error al obtener los productos. Inténtalo más tarde.', { align: 'center' });
+    // Verifica si hay resultados
+    if (products.results && products.results.length > 0) {
+      products.results.forEach((item, index) => {
+        doc.fontSize(12).text(`${index + 1}. ${item.name}`);
+        doc.text(`   Descripción: ${item.description}`);
+        doc.text(`   Categoría: ${item.category}`);
+        doc.text(`   Precio: $${item.price}`);
+        doc.text(`   Activo: ${item.active ? 'Sí' : 'No'}`);
+        doc.text(`   Imagen: ${item.image}`);
+        doc.moveDown();
+      });
+    } else {
+      doc.fontSize(12).text('No hay productos disponibles.', { align: 'center' });
     }
+  } catch (error) {
+    console.error('Error al obtener los productos:', error);
+    doc.fontSize(12).text('Error al obtener los productos. Inténtalo más tarde.', { align: 'center' });
+  }
 
-    doc.end();
+  // Finaliza el PDF
+  doc.end();
 });
 
 
