@@ -5,6 +5,8 @@ const fetch = require('node-fetch');
 const ExcelJS = require('exceljs');
 const router = express.Router();
 
+const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+
 // Middleware para validar el token
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
