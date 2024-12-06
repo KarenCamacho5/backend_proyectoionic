@@ -42,7 +42,7 @@ router.get('/reporte-pdf', async (req, res) => {
   
     // Encabezado del PDF
     doc.fontSize(18).text('Lista de Productos', { align: 'center' });
-    doc.moveDown();
+    doc.moveDown(1); // Espacio después del encabezado
   
     try {
       const response = await axios.get('https://peticiones.online/api/products');
@@ -50,16 +50,21 @@ router.get('/reporte-pdf', async (req, res) => {
   
       if (products.results && products.results.length > 0) {
         for (const [index, item] of products.results.entries()) {
+          // Añade el título del producto
+          doc.fontSize(14).text(`${index + 1}. ${item.name}`, { align: 'left' });
+          doc.moveDown(0.5); // Espacio pequeño después del título
+  
           // Añade la imagen del producto
           if (item.image) {
             try {
               const imageResponse = await axios.get(item.image, { responseType: 'arraybuffer' });
               const imageBuffer = Buffer.from(imageResponse.data, 'base64');
               doc.image(imageBuffer, {
-                fit: [150, 150], // Tamaño de la imagen
-                align: 'center',
+                fit: [120, 120], // Tamaño ajustado de la imagen
+                align: 'left',   // Alineación de la imagen
+                valign: 'top',   // Posición vertical
               });
-              doc.moveDown(2); // Espacio después de la imagen
+              doc.moveDown(1); // Espacio entre la imagen y los detalles
             } catch (error) {
               console.error(`No se pudo cargar la imagen para ${item.name}`, error);
               doc.text('   [Imagen no disponible]');
@@ -68,12 +73,11 @@ router.get('/reporte-pdf', async (req, res) => {
           }
   
           // Añade los detalles del producto
-          doc.fontSize(12).text(`${index + 1}. ${item.name}`, { continued: false });
-          doc.text(`   Descripción: ${item.description}`);
-          doc.text(`   Categoría: ${item.category}`);
-          doc.text(`   Precio: $${item.price}`);
-          doc.text(`   Activo: ${item.active ? 'Sí' : 'No'}`);
-          doc.moveDown(1); // Espacio entre productos
+          doc.fontSize(12).text(`Descripción: ${item.description}`);
+          doc.text(`Categoría: ${item.category}`);
+          doc.text(`Precio: $${item.price}`);
+          doc.text(`Activo: ${item.active ? 'Sí' : 'No'}`);
+          doc.moveDown(1.5); // Espacio entre productos
         }
       } else {
         doc.fontSize(12).text('No hay productos disponibles.', { align: 'center' });
@@ -85,6 +89,7 @@ router.get('/reporte-pdf', async (req, res) => {
   
     doc.end();
   });
+  
   
 
 
