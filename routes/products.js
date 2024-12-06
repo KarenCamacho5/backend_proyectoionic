@@ -1,6 +1,8 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const PDFDocument = require('pdfkit');
+const fetch = require('node-fetch');
+const fs = require('fs');
 const ExcelJS = require('exceljs');
 const router = express.Router();
 
@@ -31,36 +33,41 @@ router.get('/productos', authenticateToken, async (req, res) => {
 
 
 // Ruta para generar PDF
-router.get('/reporte/pdf', authenticateToken, async (req, res) => {
+app.get('/reporte-pdf', async (req, res) => {
+    const doc = new PDFDocument();
+
+    // Configura la respuesta para descarga
+    res.setHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
+    doc.pipe(res);
+
+    doc.fontSize(18).text('Lista de Productos', { align: 'center' });
+    doc.moveDown();
+
     try {
-        const fetch = (await import('node-fetch')).default;
         const response = await fetch('https://peticiones.online/api/products');
         const products = await response.json();
 
-        // Crear el documento PDF
-        const doc = new PDFDocument();
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
-        doc.pipe(res);
+        if (products.results && products.results.length > 0) {
+            products.results.forEach((item, index) => {
+                doc.fontSize(12).text(`${index + 1}. ${item.name}`);
+                doc.text(`   Descripción: ${item.description}`);
+                doc.text(`   Categoría: ${item.category}`);
+                doc.text(`   Precio: $${item.price}`);
+                doc.text(`   Activo: ${item.active ? 'Sí' : 'No'}`);
+                doc.text(`   Imagen: ${item.image}`);
+                doc.moveDown();
+            });
+        } else {
+            doc.fontSize(12).text('No hay productos disponibles.', { align: 'center' });
+        }
+    } catch (error) {
+        console.error('Error al obtener los productos:', error);
+        doc.fontSize(12).text('Error al obtener los productos. Inténtalo más tarde.', { align: 'center' });
+    }
 
-         // Añadir contenido al PDF
-         doc.fontSize(20).text('Reporte de Productos', { align: 'center' }).moveDown();
-         if (products.data && products.data.length > 0) {
-             products.data.forEach((product, index) => {
-                 doc.fontSize(12).text(`${index + 1}. ${product.name} - $${product.price}`);
-             });
-         } else {
-             doc.fontSize(12).text('No hay productos disponibles.');
-         }
- 
-         doc.end();
-     } catch (error) {
-         console.error('Error al generar el PDF:', error);
-         if (!res.headersSent) {
-             res.status(500).json({ message: 'Error al generar el PDF.' });
-         }
-     }
+    doc.end();
 });
+
 
 
 // Ruta para generar Excel
