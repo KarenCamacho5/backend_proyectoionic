@@ -35,42 +35,54 @@ router.get('/productos', authenticateToken, async (req, res) => {
 // Ruta para generar PDF
 router.get('/reporte-pdf', async (req, res) => {
     const doc = new PDFDocument();
-
-  // Configura la respuesta para descargar el PDF
-  res.setHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
-  doc.pipe(res);
-
-  // Encabezado del PDF
-  doc.fontSize(18).text('Lista de Productos', { align: 'center' });
-  doc.moveDown();
-
-  try {
-    // Realiza la solicitud HTTP utilizando axios
-    const response = await axios.get('https://peticiones.online/api/products');
-    const products = response.data;
-
-    // Verifica si hay resultados
-    if (products.results && products.results.length > 0) {
-      products.results.forEach((item, index) => {
-        doc.fontSize(12).text(`${index + 1}. ${item.name}`);
-        doc.text(`   Descripción: ${item.description}`);
-        doc.text(`   Categoría: ${item.category}`);
-        doc.text(`   Precio: $${item.price}`);
-        doc.text(`   Activo: ${item.active ? 'Sí' : 'No'}`);
-        doc.text(`   Imagen: ${item.image}`);
-        doc.moveDown();
-      });
-    } else {
-      doc.fontSize(12).text('No hay productos disponibles.', { align: 'center' });
+  
+    // Configura la respuesta para descargar el PDF
+    res.setHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
+    doc.pipe(res);
+  
+    // Encabezado del PDF
+    doc.fontSize(18).text('Lista de Productos', { align: 'center' });
+    doc.moveDown();
+  
+    try {
+      // Realiza la solicitud HTTP utilizando axios
+      const response = await axios.get('https://peticiones.online/api/products');
+      const products = response.data;
+  
+      if (products.results && products.results.length > 0) {
+        for (const [index, item] of products.results.entries()) {
+          // Añade los detalles del producto
+          doc.fontSize(12).text(`${index + 1}. ${item.name}`);
+          doc.text(`   Descripción: ${item.description}`);
+          doc.text(`   Categoría: ${item.category}`);
+          doc.text(`   Precio: $${item.price}`);
+          doc.text(`   Activo: ${item.active ? 'Sí' : 'No'}`);
+          doc.moveDown(0.5);
+  
+          // Añade la imagen del producto
+          if (item.image) {
+            try {
+              const imageResponse = await axios.get(item.image, { responseType: 'arraybuffer' });
+              const imageBuffer = Buffer.from(imageResponse.data, 'base64');
+              doc.image(imageBuffer, { fit: [150, 150], align: 'center' });
+              doc.moveDown(1);
+            } catch (error) {
+              console.error(`No se pudo cargar la imagen para ${item.name}`, error);
+              doc.text('   [Imagen no disponible]');
+              doc.moveDown(1);
+            }
+          }
+        }
+      } else {
+        doc.fontSize(12).text('No hay productos disponibles.', { align: 'center' });
+      }
+    } catch (error) {
+      console.error('Error al obtener los productos:', error);
+      doc.fontSize(12).text('Error al obtener los productos. Inténtalo más tarde.', { align: 'center' });
     }
-  } catch (error) {
-    console.error('Error al obtener los productos:', error);
-    doc.fontSize(12).text('Error al obtener los productos. Inténtalo más tarde.', { align: 'center' });
-  }
-
-  // Finaliza el PDF
-  doc.end();
-});
+  
+    doc.end();
+  });
 
 
 
