@@ -59,7 +59,7 @@ router.get('/reporte-pdf', async (req, res) => {
                 fit: [150, 150], // Tamaño de la imagen
                 align: 'center',
               });
-              doc.moveDown(0.5); // Espacio después de la imagen
+              doc.moveDown(2); // Espacio después de la imagen
             } catch (error) {
               console.error(`No se pudo cargar la imagen para ${item.name}`, error);
               doc.text('   [Imagen no disponible]');
