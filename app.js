@@ -4,10 +4,14 @@ const app = express();
 const loginRoute = require('./routes/login'); 
 const productsRoute = require('./routes/products'); 
 
-app.use(cors({
-    origin: ['http://localhost:4200', 'https://proyectoionic.onrender.com', 'http://localhost:3000', 'http://localhost:8100'], 
-    credentials: true
-}));
+const corsOptions = {
+    origin: ['http://localhost', 'http://localhost:8100', 'https://proyectoionic.onrender.com'], // Orígenes permitidos
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // Métodos permitidos
+    allowedHeaders: ['Content-Type', 'Authorization'], // Encabezados permitidos
+    credentials: true,
+  };
+  
+  app.use(cors(corsOptions));
 
 // Middleware para manejar JSON
 app.use(express.json());
