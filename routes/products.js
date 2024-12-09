@@ -100,7 +100,7 @@ router.get('/reporte-pdf', async (req, res) => {
 
 
 // Ruta para generar Excel
-router.get('/reporte/excel', authenticateToken, async (req, res) => {
+router.get('/reporte-excel', authenticateToken, async (req, res) => {
     try {
         const fetch = (await import('node-fetch')).default;
         const response = await fetch('https://peticiones.online/api/products');
@@ -111,19 +111,27 @@ router.get('/reporte/excel', authenticateToken, async (req, res) => {
 
         // Definir columnas
         worksheet.columns = [
-            { header: 'ID', key: 'id', width: 10 },
-            { header: 'Nombre', key: 'name', width: 30 },
-            { header: 'Precio', key: 'price', width: 15 },
-        ];
+          { header: 'ID', key: 'id', width: 10 },
+          { header: 'Nombre', key: 'name', width: 30 },
+          { header: 'Descripción', key: 'description', width: 50 },
+          { header: 'Precio', key: 'price', width: 15 },
+          { header: 'Categoría', key: 'category', width: 20 },
+          { header: 'Activo', key: 'active', width: 10 },
+      ];
+      
 
         // Agregar filas
         products.data.forEach((product) => {
-            worksheet.addRow({
-                id: product.id,
-                name: product.name,
-                price: product.price,
-            });
-        });
+          worksheet.addRow({
+              id: product.id,
+              name: product.name,
+              description: product.description || 'N/A',
+              price: product.price,
+              category: product.category || 'N/A',
+              active: product.active ? 'Sí' : 'No',
+          });
+      });
+      
 
         // Configurar encabezados de respuesta
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
