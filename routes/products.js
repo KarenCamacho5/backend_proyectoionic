@@ -122,9 +122,10 @@ router.get('/reporte-excel', authenticateToken, async (req, res) => {
 
          // Agregar filas con los productos
          if (products.results && products.results.length > 0) {
+          let counter = 1;
           products.results.forEach((product) => {
               worksheet.addRow({
-                  id: product.id,
+                  id: counter++,
                   name: product.name,
                   description: product.description || 'N/A',
                   price: product.price,
